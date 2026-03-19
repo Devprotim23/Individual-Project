@@ -76,6 +76,10 @@ def validate_monthly_series(
     if not isinstance(s.index, pd.DatetimeIndex):
         raise ValidationError("Series index must be a pandas DatetimeIndex.")
 
+    expected_anchor = expected_anchor.upper()
+    if expected_anchor not in ("MS", "M", "ME"):
+        raise ValidationError("expected_anchor must be 'MS' or 'M'/'ME'.")
+
     # duplicates
     n_dupes = int(s.index.duplicated().sum())
     if n_dupes > 0:
@@ -96,6 +100,22 @@ def validate_monthly_series(
     start = s_sorted.index.min()
     end = s_sorted.index.max()
 
+    # empty series: return a valid empty report without attempting date-range logic
+    if len(s_sorted) == 0:
+        return ValidationReport(
+            start="NaT",
+            end="NaT",
+            n_obs=0,
+            n_missing_values=0,
+            n_duplicate_timestamps=n_dupes,
+            is_monotonic_increasing=is_sorted,
+            inferred_freq=None,
+            expected_anchor=expected_anchor,
+            n_missing_months=0,
+            missing_months=[],
+            warnings=warnings,
+        )
+
     # missing values (NaNs)
     n_missing_values = int(s_sorted.isna().sum())
     if n_missing_values > 0:
@@ -107,10 +127,6 @@ def validate_monthly_series(
         inferred = pd.infer_freq(s_sorted.index)
     except Exception:
         inferred = None
-
-    expected_anchor = expected_anchor.upper()
-    if expected_anchor not in ("MS", "M", "ME"):
-        raise ValidationError("expected_anchor must be 'MS' or 'M'/'ME'.")
 
     # anchor check (soft warning)
     sample = s_sorted.index[: min(24, len(s_sorted))]
