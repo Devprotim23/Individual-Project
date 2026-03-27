@@ -1,51 +1,50 @@
 from __future__ import annotations
 
+"""
+backtest.py
+
+This module runs expanding-window backtests for monthly time series forecasts.
+
+For each forecast origin, the model is trained on all data available up to that
+point, then asked to forecast the next 1 to h_max months. The resulting
+forecasts are compared with the realised values that actually occurred.
+"""
+
 from collections.abc import Callable
+
 import pandas as pd
 
 
+# Raised when backtesting cannot be run safely.
 class BacktestError(Exception):
-    """Raised when backtesting cannot be run safely."""
+    pass
 
 
-def expanding_window_backtest(
-    s: pd.Series,
+# Every forecasting method must return these columns so the backtest can
+# compare forecasts consistently across methods.
+REQUIRED_FORECAST_COLUMNS = {
+    "date",
+    "method",
+    "horizon",
+    "point",
+    "lo80",
+    "hi80",
+    "lo95",
+    "hi95",
+}
+
+
+# Validate the main backtest inputs before any forecasting begins.
+def _validate_inputs(
+    series: pd.Series,
     h_max: int,
     methods: dict[str, Callable[[pd.Series, int], pd.DataFrame]],
-    min_train: int = 24,
-) -> pd.DataFrame:
-    """
-    Run an expanding-window backtest on a monthly time series.
-
-    For each forecast origin t:
-      - train on s.iloc[:t]
-      - forecast horizons 1..h_max
-      - compare forecast dates against actual observed values
-      - store predictions and actuals in one combined DataFrame
-
-    Parameters
-    ----------
-    s : pd.Series
-        Monthly series indexed by DatetimeIndex.
-    h_max : int
-        Maximum forecast horizon in months.
-    methods : dict[str, callable]
-        Mapping of method name -> forecasting function.
-        Each forecasting function must accept (series, h) and return a DataFrame
-        with columns: date, method, horizon, point, lo80, hi80, lo95, hi95
-    min_train : int, default 24
-        Minimum number of observations required before the first forecast origin.
-
-    Returns
-    -------
-    pd.DataFrame
-        Columns:
-        origin, date, method, horizon, point, lo80, hi80, lo95, hi95, actual
-    """
-    if not isinstance(s, pd.Series):
+    min_train: int,
+) -> pd.Series:
+    if not isinstance(series, pd.Series):
         raise BacktestError("Input must be a pandas Series.")
 
-    if not isinstance(s.index, pd.DatetimeIndex):
+    if not isinstance(series.index, pd.DatetimeIndex):
         raise BacktestError("Series index must be a pandas DatetimeIndex.")
 
     if h_max <= 0:
@@ -54,47 +53,106 @@ def expanding_window_backtest(
     if min_train < 1:
         raise BacktestError("min_train must be at least 1.")
 
-    if len(s) < (min_train + 1):
-        raise BacktestError("Series is too short for backtesting with the given min_train.")
+    if len(series) < (min_train + 1):
+        raise BacktestError(
+            "Series is too short for backtesting with the given minimum training size."
+        )
 
     if not methods:
         raise BacktestError("At least one forecasting method must be provided.")
 
-    s = s.sort_index()
+    series = series.sort_index().copy()
 
-    rows = []
+    if series.isna().any():
+        raise BacktestError(
+            "Series contains missing values; clean or impute before backtesting."
+        )
 
-    # t is the end of the training window, exclusive in iloc slicing
-    # so train = s.iloc[:t], and the forecast origin is the last observed date in train
-    last_possible_t = len(s) - 1
+    return series
 
-    for t in range(min_train, last_possible_t + 1):
-        train = s.iloc[:t]
-        if train.empty:
+
+# Run an expanding-window backtest across all supplied forecasting methods.
+def expanding_window_backtest(
+    series: pd.Series,
+    h_max: int,
+    methods: dict[str, Callable[[pd.Series, int], pd.DataFrame]],
+    min_train: int = 24,
+) -> pd.DataFrame:
+    series = _validate_inputs(
+        series,
+        h_max=h_max,
+        methods=methods,
+        min_train=min_train,
+    )
+
+    all_backtest_rows: list[pd.DataFrame] = []
+
+    # The loop variable marks the exclusive end of the training window.
+    # Example: if train_end_position is 24, the training set is series.iloc[:24].
+    last_train_end_position = len(series) - 1
+
+    for train_end_position in range(min_train, last_train_end_position + 1):
+        training_series = series.iloc[:train_end_position]
+
+        if training_series.empty:
             continue
 
-        origin = train.index[-1]
+        # The forecast origin is the final observed month available to the model.
+        forecast_origin = training_series.index[-1]
 
-        max_h_available = min(h_max, len(s) - t)
-        if max_h_available <= 0:
+        # Do not request horizons beyond the remaining realised data.
+        available_horizon = min(h_max, len(series) - train_end_position)
+
+        if available_horizon <= 0:
             continue
 
-        for method_name, forecast_fn in methods.items():
-            forecast_df = forecast_fn(train, max_h_available).copy()
+        for method_name, forecast_function in methods.items():
+            forecast_output = forecast_function(training_series, available_horizon).copy()
 
-            required_cols = {
-                "date", "method", "horizon", "point", "lo80", "hi80", "lo95", "hi95"
-            }
-            missing = required_cols - set(forecast_df.columns)
-            if missing:
+            missing_columns = REQUIRED_FORECAST_COLUMNS - set(forecast_output.columns)
+            if missing_columns:
                 raise BacktestError(
-                    f"Method '{method_name}' returned a DataFrame missing columns: {sorted(missing)}"
+                    f"Method '{method_name}' returned a DataFrame missing columns: "
+                    f"{sorted(missing_columns)}"
                 )
 
-            forecast_df["origin"] = origin
-            forecast_df["actual"] = forecast_df["date"].map(s)
+            # Ensure dates are in datetime format and rows are ordered correctly.
+            forecast_output["date"] = pd.to_datetime(forecast_output["date"])
+            forecast_output = forecast_output.sort_values("date").reset_index(drop=True)
 
-            cols = [
+            if forecast_output.empty:
+                raise BacktestError(
+                    f"Method '{method_name}' returned an empty forecast DataFrame."
+                )
+
+            # Add the historical forecast origin so each row can be traced back to
+            # the exact point in time where the forecast was generated.
+            forecast_output["origin"] = forecast_origin
+
+            # Look up the realised values for the same forecast dates.
+            forecast_output["actual"] = series.reindex(forecast_output["date"]).values
+
+            # Compute point forecast errors for later metric calculation.
+            forecast_output["error"] = forecast_output["actual"] - forecast_output["point"]
+            forecast_output["abs_error"] = forecast_output["error"].abs()
+            forecast_output["sq_error"] = forecast_output["error"] ** 2
+
+            # Record whether the realised value fell inside each prediction interval.
+            forecast_output["hit80"] = (
+                (forecast_output["actual"] >= forecast_output["lo80"])
+                & (forecast_output["actual"] <= forecast_output["hi80"])
+            ).astype(float)
+
+            forecast_output["hit95"] = (
+                (forecast_output["actual"] >= forecast_output["lo95"])
+                & (forecast_output["actual"] <= forecast_output["hi95"])
+            ).astype(float)
+
+            # Record interval widths to evaluate uncertainty size as well as coverage.
+            forecast_output["width80"] = forecast_output["hi80"] - forecast_output["lo80"]
+            forecast_output["width95"] = forecast_output["hi95"] - forecast_output["lo95"]
+
+            output_columns = [
                 "origin",
                 "date",
                 "method",
@@ -105,12 +163,22 @@ def expanding_window_backtest(
                 "lo95",
                 "hi95",
                 "actual",
+                "error",
+                "abs_error",
+                "sq_error",
+                "hit80",
+                "hit95",
+                "width80",
+                "width95",
             ]
-            rows.append(forecast_df[cols])
+            all_backtest_rows.append(forecast_output[output_columns])
 
-    if not rows:
+    if not all_backtest_rows:
         raise BacktestError("Backtest produced no rows.")
 
-    result = pd.concat(rows, ignore_index=True)
-    result = result.sort_values(["method", "origin", "horizon"]).reset_index(drop=True)
-    return result
+    backtest_results = pd.concat(all_backtest_rows, ignore_index=True)
+    backtest_results = backtest_results.sort_values(
+        ["method", "origin", "horizon"]
+    ).reset_index(drop=True)
+
+    return backtest_results
