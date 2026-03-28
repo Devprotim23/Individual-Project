@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-"""
-ons_io.py
+# ons_io.py
+#
+# This module loads an ONS time series download from CSV or Excel and converts
+# it into a pandas Series indexed by monthly dates.
+#
+# The current implementation is designed for the standard two-column ONS
+# download format where:
+# - column 1 contains metadata labels and monthly period labels
+# - column 2 contains metadata values or numeric observations
 
-This module loads an ONS time series download from CSV or Excel and converts it
-into a pandas Series indexed by monthly dates.
-
-The current implementation is designed for the standard two-column ONS download
-format where:
-- column 1 contains metadata labels and monthly period labels
-- column 2 contains metadata values or numeric observations
-"""
 
 from dataclasses import dataclass
 from pathlib import Path

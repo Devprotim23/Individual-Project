@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-"""
-plot.py
-
-This module creates exported forecast charts showing:
-- recent historical values
-- a single forecast path
-- 80% and 95% prediction intervals
-- a provenance/disclaimer footer for the saved PNG
-"""
+# plot.py
+#
+# This module creates exported forecast charts showing:
+# - recent historical values
+# - a single forecast path
+# - 80% and 95% prediction intervals
+# - a provenance/disclaimer footer for the saved PNG
 
 from pathlib import Path
 from typing import Mapping, Optional

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-"""
-models.py
-
-This module contains the forecasting methods used by the project.
-
-Active final methods:
-- Seasonal naïve
-- ETS
-
-ARIMA is intentionally retained in this file because it was explored during the
-project, but it is not part of the final active submitted scope.
-"""
+# models.py
+#
+# This module contains the forecasting methods used by the project.
+#
+# Active final methods:
+# - Seasonal naïve
+# - ETS
+#
+# ARIMA is intentionally retained in this file because it was explored during
+# the project, but it is not part of the final active submitted scope.
 
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.statespace.sarimax import SARIMAX

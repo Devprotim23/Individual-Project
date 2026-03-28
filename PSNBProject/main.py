@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-"""
-main.py
-
-This is the command-line entry point for the project.
-
-It runs the full batch pipeline:
-1. load the ONS series
-2. validate the monthly structure
-3. generate final forecasts for each active method
-4. run expanding-window backtests
-5. compute error and coverage metrics
-6. export CSV, JSON, and PNG outputs into a timestamped run folder
-"""
+# main.py
+#
+# This is the command-line entry point for the project.
+#
+# It runs the full batch pipeline:
+# 1. load the ONS series
+# 2. validate the monthly structure
+# 3. generate final forecasts for each active method
+# 4. run expanding-window backtests
+# 5. compute error and coverage metrics
+# 6. export CSV, JSON, and PNG outputs into a timestamped run folder
 
 import json
 from datetime import datetime

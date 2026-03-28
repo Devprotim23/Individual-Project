@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-"""
-validate.py
-
-This module validates monthly time series before they are passed into the
-forecasting and backtesting pipeline.
-
-The goal is to catch structural issues early, such as:
-- non-datetime indexes
-- duplicate timestamps
-- unsorted dates
-- missing values
-- missing months
-- incorrect monthly anchoring
-"""
+# validate.py
+#
+# This module validates monthly time series before they are passed into the
+# forecasting and backtesting pipeline.
+#
+# The goal is to catch structural issues early, such as:
+# - non-datetime indexes
+# - duplicate timestamps
+# - unsorted dates
+# - missing values
+# - missing months
+# - incorrect monthly anchoring
 
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional

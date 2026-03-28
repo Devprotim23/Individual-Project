@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-"""
-metrics.py
-
-This module calculates forecast evaluation metrics from backtest prediction data.
-It supports both point forecast accuracy metrics and prediction interval metrics.
-"""
+# metrics.py
+#
+# This module calculates forecast evaluation metrics from backtest prediction
+# data. It supports both point forecast accuracy metrics and prediction
+# interval metrics.
 
 import numpy as np
 import pandas as pd

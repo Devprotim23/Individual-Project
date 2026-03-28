@@ -1,15 +1,11 @@
 from __future__ import annotations
-
-"""
-backtest.py
-
-This module runs expanding-window backtests for monthly time series forecasts.
-
-For each forecast origin, the model is trained on all data available up to that
-point, then asked to forecast the next 1 to h_max months. The resulting
-forecasts are compared with the realised values that actually occurred.
-"""
-
+# backtest.py
+#
+# This module runs expanding-window backtests for monthly time series forecasts.
+#
+# For each forecast origin, the model is trained on all data available up to
+# that point, then asked to forecast the next 1 to h_max months. The resulting
+# forecasts are compared with the realised values that actually occurred.
 from collections.abc import Callable
 
 import pandas as pd
