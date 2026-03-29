@@ -39,23 +39,17 @@ This submission includes all files needed to run the product locally from the su
 
 ### Folder structure summary
 
-The outer project folder is:
+The submitted package root folder contains:
 
-- `individual-project/`
-
-Inside that folder are:
-
-- `.venv/`
-- `PSNBProject/`
-- `.gitignore`
 - `README.md`
 - `requirements.txt`
 - `setup.ps1`
 - `setup.sh`
+- `PSNBProject/`
 
 Inside `PSNBProject/` are:
 
-- `outputs/`
+- `series-050326.csv`
 - `app.py`
 - `backtest.py`
 - `main.py`
@@ -63,8 +57,8 @@ Inside `PSNBProject/` are:
 - `models.py`
 - `ons_io.py`
 - `plot.py`
-- `series-050326.csv`
 - `validate.py`
+- `outputs/`
 
 ### Core application files
 
@@ -157,7 +151,7 @@ Inside `PSNBProject/` are:
 
 ## Windows setup (PowerShell)
 
-From the `PSNBProject` folder, run:
+From the package root folder — the folder containing `setup.ps1`, `setup.sh`, and `README.md` — run:
 
 ```powershell
 ./setup.ps1
@@ -192,7 +186,7 @@ python -m pip install -r .\requirements.txt
 
 ## macOS / Linux setup
 
-From the `PSNBProject` folder, run:
+From the package root folder — the folder containing `setup.ps1`, `setup.sh`, and `README.md` — run:
 
 ```bash
 bash setup.sh
@@ -261,12 +255,12 @@ It also prints a short run summary in the terminal when the pipeline completes s
 
 This version launches an interactive web app in your browser.
 
-**Important:** Run this command from the **project root folder** — the folder that contains `app.py`. If you run it from another directory, Streamlit will not find the file correctly.
+**Important:** Run these commands from the **package root folder**, then change into `PSNBProject/` before launching the app. If you run Streamlit from the wrong directory, it will not find `app.py` correctly.
 
 ### Windows
 
 ```powershell
-cd path\to\PSNBProject
+cd path\to\Individual-Project\PSNBProject
 .\.venv\Scripts\Activate.ps1
 streamlit run app.py
 ```
@@ -274,7 +268,7 @@ streamlit run app.py
 ### macOS / Linux
 
 ```bash
-cd /path/to/PSNBProject
+cd /path/to/Individual-Project/PSNBProject
 source ./.venv/bin/activate
 streamlit run app.py
 ```
@@ -309,7 +303,7 @@ The app uses `series-050326.csv` as the default dataset.
 
 The project can also be run from an IDE such as PyCharm or VS Code.
 
-Open the `PSNBProject` folder in the IDE and make sure the selected Python interpreter is the project virtual environment (`.venv`).
+Open the package root folder in the IDE and make sure the selected Python interpreter is the project virtual environment (`.venv`).
 
 You can then run:
 
@@ -318,9 +312,9 @@ You can then run:
 
 Notes:
 
-- run the project from the project root folder
-- keep `series-050326.csv` in the project root folder
-- the `outputs/` folder stores generated results from `main.py`
+- run `main.py` and `app.py` from inside the `PSNBProject/` folder
+- keep `series-050326.csv` inside the `PSNBProject/` folder
+- the `outputs/` folder inside `PSNBProject/` stores generated results from `main.py`
 
 ---
 
@@ -335,12 +329,14 @@ Follow either the **Windows setup** or **macOS / Linux setup** steps above.
 Run:
 
 ```powershell
+cd .\PSNBProject
 python main.py
 ```
 
 or on macOS / Linux:
 
 ```bash
+cd ./PSNBProject
 python3 main.py
 ```
 
@@ -355,12 +351,14 @@ Expected result:
 Run:
 
 ```powershell
+cd .\PSNBProject
 streamlit run app.py
 ```
 
 or on macOS / Linux:
 
 ```bash
+cd ./PSNBProject
 streamlit run app.py
 ```
 
@@ -398,8 +396,8 @@ Use `app.py` when you want:
 
 ## Notes
 
-- The current implementation expects the dataset file to be available in the project folder.
-- Both `main.py` and `app.py` use `series-050326.csv` as the default input dataset.
+- The current implementation expects the dataset file to be available inside the `PSNBProject/` folder.
+- Both `main.py` and `app.py` use `series-050326.csv` inside `PSNBProject/` as the default input dataset.
 - The project is intended for transparency, reproducibility, and academic analysis.
 - Forecast outputs should be interpreted carefully and in context.
 
@@ -413,6 +411,7 @@ Use `app.py` when you want:
 
 ```powershell
 ./setup.ps1
+cd .\PSNBProject
 python main.py
 streamlit run app.py
 ```
@@ -421,6 +420,7 @@ streamlit run app.py
 
 ```bash
 bash setup.sh
+cd ./PSNBProject
 python3 main.py
 streamlit run app.py
 ```
