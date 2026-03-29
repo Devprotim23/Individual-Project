@@ -116,13 +116,13 @@ Inside `PSNBProject/` are:
 ### Setup and dependencies
 
 - **`requirements.txt`**  
-  Pinned Python dependencies for the project.
+  Pinned Python dependencies for the project. Recommended setup on both platforms is to create a virtual environment manually and install dependencies from this file.
 
 - **`setup.ps1`**  
-  Windows PowerShell setup script. Creates a virtual environment and installs dependencies.
+  Optional Windows PowerShell setup script. It creates a virtual environment and installs dependencies. This may be used on Windows as a convenience option, but manual setup remains the recommended method.
 
 - **`setup.sh`**  
-  macOS / Linux setup script. Creates a virtual environment and installs dependencies.
+  Optional macOS / Linux setup script. It is included for completeness, but on macOS it may not run without additional permission changes or local security adjustments. Manual setup is therefore the recommended method on macOS.
 
 ### Data
 
@@ -144,14 +144,28 @@ Inside `PSNBProject/` are:
 - Python 3.11+ is recommended
 - A working terminal / shell
 - Internet access for installing dependencies
+- An IDE such as PyCharm or VS Code is recommended for the most reliable setup and run workflow
 
 ---
 
 ## Setup
 
-## Windows setup (PowerShell)
+The recommended setup method on both platforms is to create the virtual environment manually and install the required packages from `requirements.txt` in an IDE terminal.
+
+### Recommended setup on Windows (manual)
 
 From the package root folder — the folder containing `setup.ps1`, `setup.sh`, and `README.md` — run:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install --upgrade pip
+py -m pip install -r requirements.txt
+```
+
+### Optional Windows setup script
+
+A Windows PowerShell setup script is also included as an additional option:
 
 ```powershell
 ./setup.ps1
@@ -164,49 +178,22 @@ Set-ExecutionPolicy -Scope Process Bypass
 ./setup.ps1
 ```
 
-The script will:
+This script was tested successfully on Windows, but the recommended installation route for assessment remains the manual setup above.
 
-1. Create a virtual environment called `.venv`
-2. Activate it
-3. Upgrade `pip`
-4. Install packages from `requirements.txt`
+### Recommended setup on macOS (manual)
 
-### Manual Windows setup
-
-If you prefer to run the commands yourself:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r .\requirements.txt
-```
-
----
-
-## macOS / Linux setup
-
-From the package root folder — the folder containing `setup.ps1`, `setup.sh`, and `README.md` — run:
-
-```bash
-bash setup.sh
-```
-
-The script will:
-
-1. Create a virtual environment called `.venv`
-2. Activate it
-3. Upgrade `pip`
-4. Install packages from `requirements.txt`
-
-### Manual macOS / Linux setup
+On macOS, the recommended approach is to use an IDE terminal and install the packages manually:
 
 ```bash
 python3 -m venv .venv
 source ./.venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
 ```
+
+### About `setup.sh` on macOS
+
+A `setup.sh` script is included in the package, but on macOS it may not run correctly without additional permissions or local shell/security changes. For that reason, manual setup is the recommended macOS route.
 
 ---
 
@@ -221,14 +208,16 @@ This version runs the full end-to-end pipeline and exports files to a timestampe
 ### Windows
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+cd .\PSNBProject
+..\.venv\Scripts\Activate.ps1
 python main.py
 ```
 
-### macOS / Linux
+### macOS
 
 ```bash
-source ./.venv/bin/activate
+cd ./PSNBProject
+source ../.venv/bin/activate
 python3 main.py
 ```
 
@@ -255,21 +244,21 @@ It also prints a short run summary in the terminal when the pipeline completes s
 
 This version launches an interactive web app in your browser.
 
-**Important:** Run these commands from the **package root folder**, then change into `PSNBProject/` before launching the app. If you run Streamlit from the wrong directory, it will not find `app.py` correctly.
+**Important:** Change into `PSNBProject/` before launching the app. If you run Streamlit from the wrong directory, it will not find `app.py` correctly.
 
 ### Windows
 
 ```powershell
-cd path\to\Individual-Project\PSNBProject
-.\.venv\Scripts\Activate.ps1
+cd .\PSNBProject
+..\.venv\Scripts\Activate.ps1
 streamlit run app.py
 ```
 
-### macOS / Linux
+### macOS
 
 ```bash
-cd /path/to/Individual-Project/PSNBProject
-source ./.venv/bin/activate
+cd ./PSNBProject
+source ../.venv/bin/activate
 streamlit run app.py
 ```
 
@@ -298,17 +287,19 @@ The Streamlit app supports:
 The app uses `series-050326.csv` as the default dataset.
 
 ---
-
 ## Running from an IDE
 
-The project can also be run from an IDE such as PyCharm or VS Code.
+The recommended way to run the project is from an IDE such as PyCharm or VS Code.
 
 Open the package root folder in the IDE and make sure the selected Python interpreter is the project virtual environment (`.venv`).
 
-You can then run:
+You can then:
 
-- `main.py` directly to execute the full batch pipeline and generate outputs
-- `streamlit run app.py` from the IDE terminal to launch the GUI
+- open an IDE terminal in the package root folder
+- activate the virtual environment
+- change into `PSNBProject/`
+- run `main.py` directly to execute the full batch pipeline
+- run `streamlit run app.py` from the IDE terminal to launch the GUI
 
 Notes:
 
@@ -322,21 +313,23 @@ Notes:
 
 ### Install
 
-Follow either the **Windows setup** or **macOS / Linux setup** steps above.
+Follow the recommended **manual setup** steps above. On Windows, `setup.ps1` may also be used as an additional option.
 
 ### Test the batch / CLI version
 
-Run:
+Run on Windows:
 
 ```powershell
 cd .\PSNBProject
+..\.venv\Scripts\Activate.ps1
 python main.py
 ```
 
-or on macOS / Linux:
+Run on macOS:
 
 ```bash
 cd ./PSNBProject
+source ../.venv/bin/activate
 python3 main.py
 ```
 
@@ -348,17 +341,19 @@ Expected result:
 
 ### Test the Streamlit GUI version
 
-Run:
+Run on Windows:
 
 ```powershell
 cd .\PSNBProject
+..\.venv\Scripts\Activate.ps1
 streamlit run app.py
 ```
 
-or on macOS / Linux:
+Run on macOS:
 
 ```bash
 cd ./PSNBProject
+source ../.venv/bin/activate
 streamlit run app.py
 ```
 
